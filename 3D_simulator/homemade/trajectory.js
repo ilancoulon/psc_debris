@@ -22,46 +22,26 @@ var movingDebris = true;
 init();
 animate();
 moveDebris();
-
+var debs = traceDebris();
 function handleFileSelect(evt) {
   var file = evt.target.files[0]; // FileList object
 
   // files is a FileList of File objects. List some properties.
   var output = [];
 
-  var reader = new FileReader();
 
   // Closure to capture the file information.
-  reader.onload = function(theFile) {
-    arrayFromPython = JSON.parse(reader.result);
-    trajectories = [];
 
-    for (var i = 0; i < arrayFromPython.length; i++) {
-      trajectory = [];
-      for (var j = 0; j < arrayFromPython[i].length; j++) {
-        trajectory.push({
-          x: arrayFromPython[i][j][0][0]*ratioRealToSphere,
-          y: arrayFromPython[i][j][0][1]*ratioRealToSphere,
-          z: arrayFromPython[i][j][0][2]*ratioRealToSphere
-        });
-      }
-      trajectories.push(trajectory);
-    }
-    console.log(trajectories);
-
-    moons = [];
-    for (var i = 0; i < trajectories.length; i++) {
-      var texture = new THREE.CanvasTexture( canvas );
-      var geometry = new THREE.SphereBufferGeometry( 100*ratioRealToSphere, 8, 8 );
-      var material = new THREE.MeshLambertMaterial( { map: texture } );
-      moon = new THREE.Mesh( geometry, material );
-      scene.add( moon );
-      moons.push(moon);
-    }
-  };
-
-  reader.readAsText(file);
-  console.log(output);
+  for (var i = 0; i < debs.length;i++) {
+    var texture = new THREE.CanvasTexture( canvas );
+    var geometry = new THREE.SphereBufferGeometry( 100*ratioRealToSphere, 8, 8 );
+    var material = new THREE.MeshLambertMaterial( { map: texture } );
+    material.color = new Three.Color(100/debs[i].risk,0,0);
+    moon = new THREE.Mesh( geometry, material );
+    scene.add( moon );
+    moons.push(moon);
+  }
+ 
 }
 document.getElementById('tleFile').addEventListener('change', handleFileSelect, false);
 
@@ -209,10 +189,10 @@ function moveDebris() {
   if(movingDebris) {
 
     if (typeof positionIndex !== 'undefined' &&typeof moon !== 'undefined' && typeof trajectories !== 'undefined') {
-      for (var i = 0; i < trajectories.length; i++) {
-        moons[i].position.x = trajectories[i][positionIndex].x;
-        moons[i].position.y = trajectories[i][positionIndex].y;
-        moons[i].position.z = trajectories[i][positionIndex].z;
+      for (var i = 0; i < debs.length; i++) {
+        moons[i].position.x = (debs[i].traj)[positionIndex].x;
+        moons[i].position.y = (debs[i].traj)[positionIndex].y;
+        moons[i].position.z = (debs[i].traj)[positionIndex].z;
       }
 
 
