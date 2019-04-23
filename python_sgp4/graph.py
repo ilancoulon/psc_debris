@@ -146,13 +146,15 @@ def getDminAmongDebris():
 def getTrajectory(debrisId):
     debris = getDebris()
     trajectories = []
-    
+
     print(len(debris))
-    
+
     for i in debrisId:
         trajectories.append(debris[i].trajectory())
-    
+
     with open('./trajectory_'+str(debrisId[-1]+1), 'wb') as f:
         f.write(json.dumps(trajectories))
-    
+
     print('trajectory written !')
+
+print(fetchTLE());
