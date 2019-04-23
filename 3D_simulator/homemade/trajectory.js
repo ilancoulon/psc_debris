@@ -19,16 +19,11 @@ var timeDelta=1; //timeDelta in minutes
 var tFinal=1000; // duration until end in minutes also
 
 var movingDebris = true;
+var cameraOnOurSat = true;
 
 init();
 
 function init() {
-
-  container = document.getElementById( 'container' );
-
-  camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 2000 );
-  camera.position.z = 500;
-
   scene = new THREE.Scene();
 
   group = new THREE.Group();
@@ -38,29 +33,26 @@ function init() {
 
   var loader = new THREE.TextureLoader();
   loader.load( 'three.js/examples/textures/land_ocean_ice_cloud_2048.jpg', function ( texture ) {
-
     var geometry = new THREE.SphereBufferGeometry( earthSphereRadius, 20, 20 );
 
-    var material = new THREE.MeshLambertMaterial( {
+    var material = new THREE.MeshBasicMaterial( {
       map: texture
     } );
     var mesh = new THREE.Mesh( geometry, material );
-    group.add( mesh );
+    scene.add( mesh );
 
   } );
 
+  camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 2000 );
+  camera.position.z = 500;
+
   document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-
-  //
-
   window.addEventListener( 'resize', onWindowResize, false );
-
-
-
 }
 
 function initRender() {
-  renderer = new THREE.SoftwareRenderer();
+  container = document.getElementById("container");
+  renderer = new THREE.WebGLRenderer();
   renderer.setSize( window.innerWidth, window.innerHeight );
 
   container.appendChild( renderer.domElement );
@@ -113,6 +105,15 @@ function toggleMovingDebris() {
 }
 document.getElementById('buttonMovingDebris').addEventListener('click', toggleMovingDebris);
 
+function toggleCamera() {
+  if (cameraOnOurSat) {
+    cameraOnOurSat = false;
+  } else {
+    cameraOnOurSat = true;
+  }
+}
+document.getElementById('buttonCameraOnOurSat').addEventListener('click', toggleCamera);
+
 function moveDebris() {
   setTimeout(moveDebris, 50);
   if(movingDebris) {
@@ -123,7 +124,7 @@ function moveDebris() {
       }
 
       for (var i = 0; i < numOfDebris; i++) {
-        if (typeof debris[i] !== 'undefined') {
+        if (typeof debris[i] !== 'undefined' && typeof moons[i] !== 'undefined') {
           moons[i].position.x = trajectories[i][positionIndex].position.x;
           moons[i].position.y = trajectories[i][positionIndex].position.y;
           moons[i].position.z = trajectories[i][positionIndex].position.z;
@@ -155,21 +156,21 @@ function render() {
 }
 
 function dealWithCam() {
-  if (typeof ourSat != "undefined") {
-
+  if (cameraOnOurSat) {
     camera.position.x = ourTrajectory[positionIndex].position.x*1.5;
     camera.position.y = ourTrajectory[positionIndex].position.y*1.5;
     camera.position.z = ourTrajectory[positionIndex].position.z*1.5;
     camera.lookAt( scene.position );
   } else {
-    camera.position.x += ( mouseX - camera.position.x ) * 0.5;
-    camera.position.y += ( - mouseY - camera.position.y ) * 0.5;
+    camera.position.x /= 2;
+    camera.position.y /= 2;
+    camera.position.x += ( mouseX - camera.position.x ) * 1.5;
+    camera.position.y += ( - mouseY - camera.position.y ) * 1.5;
+    camera.position.x *= 2;
+    camera.position.y *= 2;
+
     camera.lookAt( scene.position );
   }
-
-
-
-
 }
 
 function getTrajectory() {

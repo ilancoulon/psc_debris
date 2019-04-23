@@ -6,11 +6,13 @@ var trajectories;
 var ourTrajectory;
 var risks;
 
-var numOfDebris = 200;
+var numOfDebris = 1600;
 
-const ourSatId = 38;
-const mostDangerousDebId = 40;
+const ourSatId = 2681;
+const mostDangerousDebId = 2858;
 var timeOfCollision;
+
+const sizeOfDebris = 50;
 
 function drawMoons() {
   calcTraj();
@@ -20,15 +22,31 @@ function drawMoons() {
   timeOfCollision = detail.tcol;
   moons = [];
 
-  var geometry = new THREE.SphereBufferGeometry( 100*ratioRealToSphere, 4, 4 );
-  var material = new THREE.MeshLambertMaterial();
+  canvas = document.createElement( 'canvas' );
+  canvas.width = 30;
+  canvas.height = 30;
+
+  var context = canvas.getContext( '2d' );
+  var gradient = context.createRadialGradient(
+    canvas.width / 2,
+    canvas.height / 2,
+    0,
+    canvas.width / 2,
+    canvas.height / 2,
+    canvas.width / 2
+  );
+  gradient.addColorStop( 0.1, 'rgba(255,100,100,1)' );
+  gradient.addColorStop( 1, 'rgba(255,0,0,1)' );
+
+  var geometry = new THREE.SphereBufferGeometry( sizeOfDebris*ratioRealToSphere, 16, 16 );
+  var material = new THREE.MeshBasicMaterial();
   material.color = new THREE.Color(1,1,1);
   ourMoon = new THREE.Mesh( geometry, material );
   scene.add( ourMoon );
 
-  for (var i = 0; i < numOfDebris; i++) {
-    var geometry = new THREE.SphereBufferGeometry( 100*ratioRealToSphere, 4, 4 );
-    var material = new THREE.MeshLambertMaterial();
+  for (var i = 0; i < numOfDebris-1; i++) {
+    var geometry = new THREE.SphereBufferGeometry( sizeOfDebris*ratioRealToSphere, 16, 16 );
+    var material = new THREE.MeshBasicMaterial();
     if (i == mostDangerousDebId) {
       material.color = new THREE.Color(0,0,1);
     } else {
@@ -45,10 +63,21 @@ function drawMoons() {
 function calcTraj() {
   trajectories = [];
 
+  var nowDate = moment("2019-04-23 12:30").toDate();
+  var nowJ = jday(nowDate.getUTCFullYear(),
+               nowDate.getUTCMonth() + 1,
+               nowDate.getUTCDate(),
+               nowDate.getUTCHours(),
+               nowDate.getUTCMinutes(),
+               nowDate.getUTCSeconds());
+  nowJ += nowDate.getUTCMilliseconds() * 1.15741e-8; //days per millisecond
+
+
   for (var i = 0; i < debris.length; i++) {
     trajectories[i] = [];
+    var now = (nowJ - debris[i].jdsatepoch) * 1440.0; //in minutes
     for(var t=0; t < tFinal; t += timeDelta){
-      var aux = satellite.sgp4(debris[i],t);
+      var aux = satellite.sgp4(debris[i], now + t/60);
 
       if (!aux.position || !aux.velocity) {
         aux = {
@@ -79,9 +108,11 @@ function calcTraj() {
       });
     }
   }
+  var now = (nowJ - ourSat.jdsatepoch) * 1440.0; //in minutes
+
   ourTrajectory = [];
   for(var t=0; t < tFinal; t += timeDelta){
-    var aux = satellite.sgp4(ourSat,t);
+    var aux = satellite.sgp4(ourSat,now + t/60);
     ourTrajectory.push({
       position: {
         x: ratioRealToSphere * aux.position.x,
@@ -126,7 +157,7 @@ function calculateRisk(i) {
   }
   var vcol=dist(ourTrajectory[jcol].velocity, trajectories[i][jcol].velocity);
   var tcol=jcol*timeDelta+1; //in minutes
-  return 100 / (dmin/(vcol**0.2)*(tcol**0.3));
+  return 100 / (dmin/(vcol**1)*(tcol**0.5));
 }
 function detailRisk(i) {
   var dmin=dist(ourTrajectory[0].position,trajectories[i][0].position);
@@ -154,6 +185,7 @@ function findClosest() {
   var maxSat = 0;
   var maxDeb = 0;
   for (var i = 0; i < trajectories.length; i++) {
+    console.log("Oursat : "+i);
     ourTrajectory = trajectories[i];
     for (var j = i+1; j < trajectories.length; j++) {
       curRisk = calculateRisk(j);
@@ -174,7 +206,7 @@ function findClosest() {
 function fetchTLE() {
   console.log("Fetching TLE from spacetrack...");
   const query = 'https://www.space-track.org/basicspacedata/query/class/tle_latest/ORDINAL/1/EPOCH/%3Enow-30/MEAN_MOTION/%3E11.25/ECCENTRICITY/%3C0.25/OBJECT_TYPE/payload/orderby/NORAD_CAT_ID/format/tle';
-  var url = new URL("http://psc3d/homemade/api.txt");
+  var url = new URL("http://psc3d/homemade/tle.txt");
   fetch(url, {
     method: 'POST'
   })
@@ -183,9 +215,10 @@ function fetchTLE() {
     (result) => {
       console.log("TLEs fetched !");
       const tles = result.split('\n');
+      numOfDebris = tles.length/2 - 1;
       ourSat = satellite.twoline2satrec(tles[0], tles[1]);
       debris = [];
-      for (var i = 2; i < numOfDebris; i+=2) {
+      for (var i = 2; i < numOfDebris*2; i+=2) {
         const satrec = satellite.twoline2satrec(tles[i], tles[i+1]);
         debris.push(satrec);
       }
@@ -200,3 +233,14 @@ function fetchTLE() {
 }
 
 fetchTLE();
+
+function jday(year, mon, day, hr, minute, sec){ //from satellite.js
+  'use strict';
+  return (367.0 * year -
+        Math.floor((7 * (year + Math.floor((mon + 9) / 12.0))) * 0.25) +
+        Math.floor( 275 * mon / 9.0 ) +
+        day + 1721013.5 +
+        ((sec / 60.0 + minute) / 60.0 + hr) / 24.0  //  ut in days
+        //#  - 0.5*sgn(100.0*year + mon - 190002.5) + 0.5;
+        );
+}
