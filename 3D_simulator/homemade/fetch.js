@@ -12,9 +12,9 @@ const ourSatId = 2681;
 const mostDangerousDebId = 2858;
 var timeOfCollision;
 
-const sizeOfDebris = 50;
+const sizeOfDebris = 30;
 
-var speedRatio = 200;
+var speedRatio = 100;
 var refreshingRate = 0.05;//s
 
 function drawMoons() {
@@ -22,29 +22,13 @@ function drawMoons() {
   calculateRisks();
   drawOurLine();
   var detail = detailRisk(mostDangerousDebId);
-  timeOfCollision = detail.tcol;
+  timeOfCollision = detail.tcol - 2;
   moons = [];
 
-  canvas = document.createElement( 'canvas' );
-  canvas.width = 30;
-  canvas.height = 30;
 
-  var context = canvas.getContext( '2d' );
-  var gradient = context.createRadialGradient(
-    canvas.width / 2,
-    canvas.height / 2,
-    0,
-    canvas.width / 2,
-    canvas.height / 2,
-    canvas.width / 2
-  );
-  gradient.addColorStop( 0.1, 'rgba(255,100,100,1)' );
-  gradient.addColorStop( 1, 'rgba(255,0,0,1)' );
-
-  var geometry = new THREE.SphereBufferGeometry( sizeOfDebris*ratioRealToSphere, 16, 16 );
-  var material = new THREE.MeshBasicMaterial();
-  material.color = new THREE.Color(1,1,1);
-  ourMoon = new THREE.Mesh( geometry, material );
+  var geometry2 = new THREE.SphereBufferGeometry( (sizeOfDebris+30)*ratioRealToSphere, 16, 16 );
+  var material2 = new THREE.MeshBasicMaterial();
+  ourMoon = new THREE.Mesh( geometry2, material2 );
   scene.add( ourMoon );
 
   for (var i = 0; i < numOfDebris-1; i++) {
@@ -58,6 +42,7 @@ function drawMoons() {
     moon = new THREE.Mesh( geometry, material );
     scene.add( moon );
     moons.push(moon);
+
   }
 
   initRender();

@@ -17,7 +17,7 @@ var earthRealRadius = 6371;
 var ratioRealToSphere = earthSphereRadius / earthRealRadius;
 
 var timeDelta=1; //timeDelta in minutes
-var tFinal=1000; // duration until end in minutes also
+var tFinal=2000; // duration until end in minutes also
 
 var movingDebris = true;
 var cameraOnOurSat = 0;
@@ -34,7 +34,7 @@ function init() {
 
   var loader = new THREE.TextureLoader();
   loader.load( 'three.js/examples/textures/land_ocean_ice_cloud_2048.jpg', function ( texture ) {
-    var geometry = new THREE.SphereBufferGeometry( earthSphereRadius, 20, 20 );
+    var geometry = new THREE.SphereBufferGeometry( earthSphereRadius, 64, 64 );
 
     var material = new THREE.MeshBasicMaterial( {
       map: texture
@@ -126,7 +126,7 @@ function moveDebris() {
       }
 
       for (var i = 0; i < numOfDebris; i++) {
-        if (typeof debris[i] !== 'undefined' && typeof moons[i] !== 'undefined') {
+        if (i != ourSatId && typeof debris[i] !== 'undefined' && typeof moons[i] !== 'undefined') {
           moons[i].position.x = trajectories[i][positionIndex].position.x;
           moons[i].position.y = trajectories[i][positionIndex].position.y;
           moons[i].position.z = trajectories[i][positionIndex].position.z;
@@ -161,9 +161,9 @@ function dealWithCam() {
   if (cameraOnOurSat == 0) {
     const ourPos = ourTrajectory[positionIndex].position;
     const ourVel = ourTrajectory[positionIndex].velocity;
-    camera.position.x = ourPos.x*1.5 - ourVel.x*500;
-    camera.position.y = ourPos.y*1.5 - ourVel.y*500;
-    camera.position.z = ourPos.z*1.5 - ourVel.z*500;
+    camera.position.x = ourPos.x*1.1 - ourVel.x*200;
+    camera.position.y = ourPos.y*1.1 - ourVel.y*200;
+    camera.position.z = ourPos.z*1.1 - ourVel.z*200;
     camera.lookAt( new THREE.Vector3(
       ourPos.x,
       ourPos.y,
@@ -181,12 +181,6 @@ function dealWithCam() {
       ourPos.z
     ) );
   } else {
-    // camera.position.x /= 4;
-    // camera.position.y /= 4;
-    // camera.position.x += ( mouseX - camera.position.x ) * 0.5;
-    // camera.position.y += ( - mouseY - camera.position.y ) * 0.5;
-    // camera.position.x *= 4;
-    // camera.position.y *= 4;
     controls.update();
 
     camera.lookAt( scene.position );
@@ -209,7 +203,7 @@ function drawOurLine() {
   const numberForOneTurn = i + numberOfSegments + 1;
   const step = Math.floor(numberForOneTurn / numberOfSegments);
   var material = new THREE.LineBasicMaterial( {
-    color: 0x0000aa
+    color: 0xffffff
   } );
   var geometry = new THREE.Geometry();
   for (var i = 0; i < numberOfSegments; i++) {
