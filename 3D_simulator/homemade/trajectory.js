@@ -6,6 +6,7 @@ var group;
 var mouseX = 0, mouseY = 0;
 var moon;
 var canvas;
+var controls;
 
 var windowHalfX = window.innerWidth / 2;
 var windowHalfY = window.innerHeight / 2;
@@ -19,7 +20,7 @@ var timeDelta=1; //timeDelta in minutes
 var tFinal=1000; // duration until end in minutes also
 
 var movingDebris = true;
-var cameraOnOurSat = true;
+var cameraOnOurSat = 0;
 
 init();
 
@@ -44,7 +45,9 @@ function init() {
   } );
 
   camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 2000 );
-  camera.position.z = 500;
+  camera.position.z = 1000;
+
+  controls = new THREE.OrbitControls( camera );
 
   document.addEventListener( 'mousemove', onDocumentMouseMove, false );
   window.addEventListener( 'resize', onWindowResize, false );
@@ -106,18 +109,17 @@ function toggleMovingDebris() {
 document.getElementById('buttonMovingDebris').addEventListener('click', toggleMovingDebris);
 
 function toggleCamera() {
-  if (cameraOnOurSat) {
-    cameraOnOurSat = false;
+  if (cameraOnOurSat == 2) {
+    cameraOnOurSat = 0;
   } else {
-    cameraOnOurSat = true;
+    cameraOnOurSat++;
   }
 }
 document.getElementById('buttonCameraOnOurSat').addEventListener('click', toggleCamera);
 
 function moveDebris() {
-  setTimeout(moveDebris, 50);
+  setTimeout(moveDebris, refreshingRate*1000);
   if(movingDebris) {
-
     if (typeof positionIndex !== 'undefined' &&typeof moon !== 'undefined') {
       if (positionIndex == timeOfCollision) {
         toggleMovingDebris();
@@ -156,18 +158,36 @@ function render() {
 }
 
 function dealWithCam() {
-  if (cameraOnOurSat) {
-    camera.position.x = ourTrajectory[positionIndex].position.x*1.5;
-    camera.position.y = ourTrajectory[positionIndex].position.y*1.5;
-    camera.position.z = ourTrajectory[positionIndex].position.z*1.5;
-    camera.lookAt( scene.position );
+  if (cameraOnOurSat == 0) {
+    const ourPos = ourTrajectory[positionIndex].position;
+    const ourVel = ourTrajectory[positionIndex].velocity;
+    camera.position.x = ourPos.x*1.5 - ourVel.x*500;
+    camera.position.y = ourPos.y*1.5 - ourVel.y*500;
+    camera.position.z = ourPos.z*1.5 - ourVel.z*500;
+    camera.lookAt( new THREE.Vector3(
+      ourPos.x,
+      ourPos.y,
+      ourPos.z
+    ) );
+  } else if(cameraOnOurSat == 1) {
+    const ourPos = ourTrajectory[positionIndex].position;
+    const ourVel = ourTrajectory[positionIndex].velocity;
+    camera.position.x = ourPos.x*1.5;
+    camera.position.y = ourPos.y*1.5;
+    camera.position.z = ourPos.z*1.5;
+    camera.lookAt( new THREE.Vector3(
+      ourPos.x,
+      ourPos.y,
+      ourPos.z
+    ) );
   } else {
-    camera.position.x /= 2;
-    camera.position.y /= 2;
-    camera.position.x += ( mouseX - camera.position.x ) * 1.5;
-    camera.position.y += ( - mouseY - camera.position.y ) * 1.5;
-    camera.position.x *= 2;
-    camera.position.y *= 2;
+    // camera.position.x /= 4;
+    // camera.position.y /= 4;
+    // camera.position.x += ( mouseX - camera.position.x ) * 0.5;
+    // camera.position.y += ( - mouseY - camera.position.y ) * 0.5;
+    // camera.position.x *= 4;
+    // camera.position.y *= 4;
+    controls.update();
 
     camera.lookAt( scene.position );
   }
@@ -178,8 +198,15 @@ function getTrajectory() {
 }
 
 function drawOurLine() {
-  const numberOfSegments = 50;
-  const numberForOneTurn = 200;
+  var i = 0;
+  while(dist(ourTrajectory[0].position, ourTrajectory[i].position) < 5) {
+    i++;
+  }
+  while(dist(ourTrajectory[0].position, ourTrajectory[i].position) > 1) {
+    i++;
+  }
+  const numberOfSegments = 250;
+  const numberForOneTurn = i + numberOfSegments + 1;
   const step = Math.floor(numberForOneTurn / numberOfSegments);
   var material = new THREE.LineBasicMaterial( {
     color: 0x0000aa

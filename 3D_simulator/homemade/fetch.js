@@ -14,6 +14,9 @@ var timeOfCollision;
 
 const sizeOfDebris = 50;
 
+var speedRatio = 200;
+var refreshingRate = 0.05;//s
+
 function drawMoons() {
   calcTraj();
   calculateRisks();
@@ -77,7 +80,7 @@ function calcTraj() {
     trajectories[i] = [];
     var now = (nowJ - debris[i].jdsatepoch) * 1440.0; //in minutes
     for(var t=0; t < tFinal; t += timeDelta){
-      var aux = satellite.sgp4(debris[i], now + t/60);
+      var aux = satellite.sgp4(debris[i], now + (t/60 * refreshingRate * speedRatio));
 
       if (!aux.position || !aux.velocity) {
         aux = {
@@ -112,7 +115,7 @@ function calcTraj() {
 
   ourTrajectory = [];
   for(var t=0; t < tFinal; t += timeDelta){
-    var aux = satellite.sgp4(ourSat,now + t/60);
+    var aux = satellite.sgp4(ourSat,now + t/60 * refreshingRate * speedRatio);
     ourTrajectory.push({
       position: {
         x: ratioRealToSphere * aux.position.x,
@@ -157,7 +160,7 @@ function calculateRisk(i) {
   }
   var vcol=dist(ourTrajectory[jcol].velocity, trajectories[i][jcol].velocity);
   var tcol=jcol*timeDelta+1; //in minutes
-  return 100 / (dmin/(vcol**1)*(tcol**0.5));
+  return 100  * vcol**0.3 / (dmin**2 * (tcol**0.2));
 }
 function detailRisk(i) {
   var dmin=dist(ourTrajectory[0].position,trajectories[i][0].position);
