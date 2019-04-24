@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js software - geometry - earth</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #808080;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+
+				background-color: #ffffff;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+			}
+
+			a {
+
+				color: #0080ff;
+			}
+
+		</style>
+	</head>
+	<body>
+
+		<div id="container"></div>
+		<div id="info">
+			Time : <span id="timeSpan">0</span>
+			<button id="buttonMovingDebris">Pause</button>
+			<button id="buttonCameraOnOurSat">Camera view</button>
+			<input type="number" id="speedRatio" />
+		</div>
+
+		<script src="three.js/build/three.js"></script>
+
+		<script src="three.js/examples/js/controls/OrbitControls.js"></script>
+
+		<script src="three.js/examples/js/libs/stats.min.js"></script>
+		<script src="moment.js"></script>
+		<script src="satellite.js"></script>
+		<script src="trajectory.js"></script>
+		<script src="fetch.js"></script>
+
+	</body>
+</html>
