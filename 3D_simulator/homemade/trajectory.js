@@ -120,8 +120,8 @@ function toggleCamera() {
 document.getElementById('buttonCameraOnOurSat').addEventListener('click', toggleCamera);
 
 function togglePartNumber() {
-  resetAnimation();
-  if (partNumber == 2) {
+  // resetAnimation();
+  if (partNumber == 3) {
     partNumber = 1;
   } else {
     partNumber++;
@@ -186,6 +186,18 @@ function dealWithParts() {
     ourRadar.position.y = ourTrajectory[positionIndex].position.y;
     ourRadar.position.z = ourTrajectory[positionIndex].position.z;
 
+
+    radarCone.position.x = 0;
+    radarCone.position.y = 0;
+    radarCone.position.z = 0;
+
+    return;
+  }
+  if (partNumber == 3) {
+
+    ourRadar.position.x = 0;
+    ourRadar.position.y = 0;
+    ourRadar.position.z = 0;
     var directionToLookAt = new THREE.Vector3();
 
     radarCone.position.x = ourTrajectory[positionIndex].position.x;
@@ -194,10 +206,7 @@ function dealWithParts() {
     directionToLookAt.subVectors( moons[mostDangerousDebId].position, radarCone.position ).normalize();
 
     radarCone.lookAt(moons[mostDangerousDebId].position);
-    console.log(directionToLookAt);
-    console.log(radarCone.position);
     radarCone.translateOnAxis(radarCone.worldToLocal(moons[mostDangerousDebId].position).normalize(),360*ratioRealToSphere/2);
-
     return;
   }
   ourRadar.position.x = 0;
