@@ -17,10 +17,12 @@ var earthRealRadius = 6371;
 var ratioRealToSphere = earthSphereRadius / earthRealRadius;
 
 var timeDelta=1; //timeDelta in minutes
-var tFinal=2000; // duration until end in minutes also
+var tFinal=3000; // duration until end in minutes also
 
 var movingDebris = true;
 var cameraOnOurSat = 0;
+
+var partNumber = 1;
 
 init();
 
@@ -117,6 +119,32 @@ function toggleCamera() {
 }
 document.getElementById('buttonCameraOnOurSat').addEventListener('click', toggleCamera);
 
+function togglePartNumber() {
+  // resetAnimation();
+  if (partNumber == 3) {
+    partNumber = 1;
+  } else {
+    partNumber++;
+  }
+}
+document.getElementById('buttonPart').addEventListener('click', togglePartNumber);
+
+function resetAnimation() {
+  positionIndex = 0;
+  refreshTimeDisplay();
+}
+document.getElementById('buttonReset').addEventListener('click', resetAnimation);
+
+function buttonSlower() {
+  refreshingRate *= 2;
+}
+function buttonFaster() {
+  refreshingRate /= 2;
+}
+document.getElementById('buttonSlower').addEventListener('click', buttonSlower);
+document.getElementById('buttonFaster').addEventListener('click', buttonFaster);
+
+
 function moveDebris() {
   setTimeout(moveDebris, refreshingRate*1000);
   if(movingDebris) {
@@ -136,7 +164,11 @@ function moveDebris() {
       ourMoon.position.y = ourTrajectory[positionIndex].position.y;
       ourMoon.position.z = ourTrajectory[positionIndex].position.z;
 
-      document.getElementById("timeSpan").textContent = positionIndex;
+
+      dealWithParts();
+
+
+      refreshTimeDisplay();
 
       if (positionIndex < tFinal/timeDelta - 2) {
         positionIndex += 1;
@@ -146,6 +178,47 @@ function moveDebris() {
     }
   }
 
+}
+
+function dealWithParts() {
+  if (partNumber == 2) {
+    ourRadar.position.x = ourTrajectory[positionIndex].position.x;
+    ourRadar.position.y = ourTrajectory[positionIndex].position.y;
+    ourRadar.position.z = ourTrajectory[positionIndex].position.z;
+
+
+    radarCone.position.x = 0;
+    radarCone.position.y = 0;
+    radarCone.position.z = 0;
+
+    return;
+  }
+  if (partNumber == 3) {
+
+    ourRadar.position.x = 0;
+    ourRadar.position.y = 0;
+    ourRadar.position.z = 0;
+    var directionToLookAt = new THREE.Vector3();
+
+    radarCone.position.x = ourTrajectory[positionIndex].position.x;
+    radarCone.position.y = ourTrajectory[positionIndex].position.y;
+    radarCone.position.z = ourTrajectory[positionIndex].position.z;
+    directionToLookAt.subVectors( moons[mostDangerousDebId].position, radarCone.position ).normalize();
+
+    radarCone.lookAt(moons[mostDangerousDebId].position);
+    radarCone.translateOnAxis(radarCone.worldToLocal(moons[mostDangerousDebId].position).normalize(),360*ratioRealToSphere/2);
+    return;
+  }
+  ourRadar.position.x = 0;
+  ourRadar.position.y = 0;
+  ourRadar.position.z = 0;
+  radarCone.position.x = 0;
+  radarCone.position.y = 0;
+  radarCone.position.z = 0;
+}
+
+function refreshTimeDisplay() {
+  document.getElementById("timeSpan").textContent = positionIndex;
 }
 
 function render() {
@@ -197,6 +270,7 @@ function drawOurLine() {
     i++;
   }
   while(dist(ourTrajectory[0].position, ourTrajectory[i].position) > 1) {
+
     i++;
   }
   const numberOfSegments = 250;
@@ -216,4 +290,27 @@ function drawOurLine() {
   var line = new THREE.Line( geometry, material );
   scene.add(line);
   console.log(line);
+}
+
+// obj - your object (THREE.Object3D or derived)
+// point - the point of rotation (THREE.Vector3)
+// axis - the axis of rotation (normalized THREE.Vector3)
+// theta - radian value of rotation
+// pointIsWorld - boolean indicating the point is in world coordinates (default = false)
+function rotateAboutPoint(obj, point, axis, theta, pointIsWorld){
+	pointIsWorld = (pointIsWorld === undefined)? false : pointIsWorld;
+
+	if(pointIsWorld){
+		obj.parent.localToWorld(obj.position); // compensate for world coordinate
+	}
+
+	obj.position.sub(point); // remove the offset
+	obj.position.applyAxisAngle(axis, theta); // rotate the POSITION
+	obj.position.add(point); // re-add the offset
+
+	if(pointIsWorld){
+		obj.parent.worldToLocal(obj.position); // undo world coordinates compensation
+	}
+
+	obj.rotateOnAxis(axis, theta); // rotate the OBJECT
 }

@@ -224,7 +224,7 @@ function fetchTLE() {
   const query = 'https://www.space-track.org/basicspacedata/query/class/tle_latest/ORDINAL/1/EPOCH/%3Enow-30/MEAN_MOTION/%3E11.25/ECCENTRICITY/%3C0.25/OBJECT_TYPE/payload/orderby/NORAD_CAT_ID/format/tle';
   var url = new URL("http://psc3d/homemade/tle.txt");
   fetch(url, {
-    method: 'POST'
+    method: 'GET'
   })
   .then(res => res.text())
   .then(
