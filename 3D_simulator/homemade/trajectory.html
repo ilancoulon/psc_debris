@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js software - geometry - earth</title>
+		<title>Simulation 3D pour PSC</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
@@ -22,6 +22,12 @@
 				padding: 5px;
 			}
 
+			#credits {
+				position: absolute;
+				bottom: 0px;
+				width: 100%;
+			}
+
 			a {
 
 				color: #0080ff;
@@ -33,10 +39,17 @@
 
 		<div id="container"></div>
 		<div id="info">
-			Time : <span id="timeSpan">0</span>
-			<button id="buttonMovingDebris">Pause</button>
+			<button id="buttonMovingDebris">Play/Pause</button>
+			<button id="buttonReset">Reset</button>
 			<button id="buttonCameraOnOurSat">Camera view</button>
-			<input type="number" id="speedRatio" />
+			<button id="buttonPart">Part I/II</button><br>
+			<button id="buttonSlower">Slower</button>
+			<button id="buttonFaster">Faster</button><br>
+			Time : <span id="timeSpan">0</span>
+		</div>
+		<div id="credits">
+			Simulation réalisée dans le cadre d'un PSC par <br>
+			Cunha Leonardo – Coulon Ilan – Chou Jean-Peic – Lazare Gauthier – Chalumeau Félix – Bracq Thibault
 		</div>
 
 		<script src="three.js/build/three.js"></script>

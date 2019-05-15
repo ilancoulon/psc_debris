@@ -2,9 +2,13 @@ var debris;
 var ourSat;
 var moons;
 var ourMoon;
+var ourRadar;
+var radarCone;
 var trajectories;
 var ourTrajectory;
 var risks;
+
+var ourSatGroup;
 
 var numOfDebris = 1600;
 
@@ -14,7 +18,7 @@ var timeOfCollision;
 
 const sizeOfDebris = 30;
 
-var speedRatio = 100;
+var speedRatio = 50;
 var refreshingRate = 0.05;//s
 
 function drawMoons() {
@@ -25,11 +29,32 @@ function drawMoons() {
   timeOfCollision = detail.tcol - 2;
   moons = [];
 
+  ourSatGroup = new THREE.Group();
+  scene.add(ourSatGroup);
 
-  var geometry2 = new THREE.SphereBufferGeometry( (sizeOfDebris+30)*ratioRealToSphere, 16, 16 );
+
+  var geometry2 = new THREE.SphereBufferGeometry( (sizeOfDebris)*ratioRealToSphere, 16, 16 );
   var material2 = new THREE.MeshBasicMaterial();
   ourMoon = new THREE.Mesh( geometry2, material2 );
-  scene.add( ourMoon );
+  ourSatGroup.add( ourMoon );
+
+  var geometry2 = new THREE.SphereBufferGeometry( (49)*ratioRealToSphere, 16, 16 );
+  var material2 = new THREE.MeshBasicMaterial();
+  material2.color = new THREE.Color(0,0,1);
+  material2.transparent = true;
+  material2.opacity = 0.5;
+  ourRadar = new THREE.Mesh( geometry2, material2 );
+  ourSatGroup.add( ourRadar );
+
+
+  var geometry2 = new THREE.ConeGeometry( 10*ratioRealToSphere, 360*ratioRealToSphere, 32 );
+  geometry2.applyMatrix(new THREE.Matrix4().makeRotationX(- Math.PI / 2));
+  var material2 = new THREE.MeshBasicMaterial();
+  material2.color = new THREE.Color(1,0,0);
+  material2.transparent = true;
+  material2.opacity = 0.5;
+  radarCone = new THREE.Mesh( geometry2, material2 );
+  ourSatGroup.add( radarCone );
 
   for (var i = 0; i < numOfDebris-1; i++) {
     var geometry = new THREE.SphereBufferGeometry( sizeOfDebris*ratioRealToSphere, 16, 16 );
@@ -60,8 +85,10 @@ function calcTraj() {
                nowDate.getUTCSeconds());
   nowJ += nowDate.getUTCMilliseconds() * 1.15741e-8; //days per millisecond
 
+  console.groupCollapsed("Calculating trajectories...");
 
   for (var i = 0; i < debris.length; i++) {
+    console.log(i+"/"+debris.length);
     trajectories[i] = [];
     var now = (nowJ - debris[i].jdsatepoch) * 1440.0; //in minutes
     for(var t=0; t < tFinal; t += timeDelta){
@@ -96,6 +123,7 @@ function calcTraj() {
       });
     }
   }
+  console.groupEnd();
   var now = (nowJ - ourSat.jdsatepoch) * 1440.0; //in minutes
 
   ourTrajectory = [];
